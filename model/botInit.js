@@ -267,6 +267,20 @@ export default class botInit {
       }
     }
     for (let item of msg) {
+      if(item.type === 'at') {
+        if(!bodyContent.markdown.params) {
+          bodyContent.markdown.params = [
+            {
+              key: 'text_start',
+              values: [
+                `<@${item.uid}>`
+              ]
+            }
+          ]
+        }  
+      } else {
+        bodyContent.markdown.params[0].values[0] += `<@${item.uid}>`
+      }
       if(item.type === 'text') {
         if(!bodyContent.markdown.params) {
           bodyContent.markdown.params = [
@@ -293,6 +307,17 @@ export default class botInit {
               key: 'img_url',values:[`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
             }
           ]
+        } else {
+          bodyContent.markdown.params.push(
+            {
+              key: 'img_dec',values:[`图片 #${imagePX.width}px #${imagePX.height}px`]
+            }
+          )
+          bodyContent.markdown.params.push(
+            {
+              key: 'img_url',values:[`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
+            }
+          )
         }
         logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
       }
