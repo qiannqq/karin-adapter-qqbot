@@ -39,7 +39,7 @@ export default new class httpServer {
         fs.writeFileSync(pluginPath+`temp/qqbot${times}${number}.jpg`, data, `base64`)
         setTimeout(async () => {
             fs.unlinkSync(pluginPath+`temp/qqbot${times}${number}.jpg`)
-        }, 300000)
+        }, 30000)
         return `qqbot${times}${number}.jpg`
     }
     async getLocalIP() {
