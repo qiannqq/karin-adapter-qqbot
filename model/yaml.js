@@ -1,18 +1,22 @@
-import fs from 'fs'
-import YAML from 'yaml'
-let pluginPath = './plugins/karin-plugin-qqbot/config/'
+import fs from 'fs';
+import YAML from 'yaml';
 
-export default new class botyaml {
-    async botip() {
-        let yaml = YAML.parse(fs.readFileSync(pluginPath+'config/Bot.yaml', 'utf-8'))
-        return yaml.botip
-    }
-    async botport() {
-        let yaml = YAML.parse(fs.readFileSync(pluginPath+'config/Bot.yaml', 'utf-8'))
-        return yaml.botport
-    }
-    async frport() {
-        let yaml = YAML.parse(fs.readFileSync(pluginPath+'config/Bot.yaml', 'utf-8'))
-        return yaml.frport
-    }
+let cfg = {};
+
+function loadConfig() {
+  try {
+    const configPath = './plugins/karin-plugin-qqbot/config/config/Bot.yaml';
+    const config = YAML.parse(fs.readFileSync(configPath, 'utf8'));
+    cfg = config;
+  } catch (error) {}
 }
+
+loadConfig();
+
+fs.watch('./plugins/karin-plugin-qqbot/config/config/Bot.yaml', (event, filename) => {
+  if (event === 'change') {
+    loadConfig();
+  }
+});
+
+export default cfg;

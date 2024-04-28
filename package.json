@@ -7,6 +7,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "sharp": "*"
+  },
   "author": "千奈千祁",
   "license": "GPL-3.0"
 }

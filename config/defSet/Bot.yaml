@@ -8,3 +8,7 @@ botip:
 botport: 2654
 # 实际端口 (如果你是使用frp，则填frp提供的端口)
 frport: 
+# 是否启用 markdown (启用后所有由QQBot处理发送的消息都会变成markdown)
+markdown: false
+# markdown 模板ID
+markdown_id: ''

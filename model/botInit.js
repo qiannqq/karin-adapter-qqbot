@@ -5,7 +5,8 @@ import fetch from 'node-fetch'
 import pluginLoader from './eventInit.js'
 import { redis } from '../../../lib/index.js'
 import httpServer from './httpInit.js'
-import botyaml from './yaml.js'
+import cfg from './yaml.js'
+import sharp from 'sharp';
 
 export default class botInit {
   constructor (botConfig) {
@@ -122,6 +123,7 @@ export default class botInit {
           ],
           msg: '',
           reply: async (msg) => {
+            if(cfg.markdown) return await this.SendMarkdown(msg, data)
             let msg_seq
             try {
               msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
@@ -151,11 +153,11 @@ export default class botInit {
                   },
                   body: JSON.stringify({
                     file_type: 1,
-                    url: `http://${await botyaml.botip() || await httpServer.getLocalIP()}:${await botyaml.frport() || await botyaml.botport()}/image/${imagePath}`,
+                    url: `http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`,
                     srv_send_msg: false
                   })
                 }
-                logger.debug(`http://${await botyaml.botip() || await httpServer.getLocalIP()}:${await botyaml.frport() || await botyaml.botport()}/image/${imagePath}`)
+                logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
                 let mediaResult
                 try {
                   mediaResult = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/files`, mediaBody)
@@ -241,7 +243,95 @@ export default class botInit {
     })
     return ws;
   }
-  async testClose () {
-    this.ws.close()
+  // async testClose () {
+  //   this.ws.close()
+  // }
+  async SendMarkdown(msg, data) {
+    let msg_seq
+    try {
+      msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
+    } catch {}
+    if(!msg_seq) {
+      msg_seq = 1
+    } else {
+      msg_seq++
+    }
+    await redis.set(`QQBot:${data.d.id}`, JSON.stringify(msg_seq), { EX: 300 })
+    let bodyContent = {
+      content: ' ',
+      msg_type: 2,
+      msg_id: data.d.id,
+      msg_seq,
+      markdown: {
+        custom_template_id: cfg.markdown_id || '1145141919810'
+      }
+    }
+    for (let item of msg) {
+      if(item.type === 'text') {
+        if(!bodyContent.markdown.params) {
+          bodyContent.markdown.params = [
+            {
+              key: 'text_start',
+              values: [
+                item.text
+              ]
+            }
+          ]
+        } else {
+          bodyContent.markdown.params[0].values[0] += item.text
+        }
+      }
+      if(item.type === 'image') {
+        let imagePath = await httpServer.writeImage(item.file)
+        let imagePX = await this.measureImageSize(`./plugins/karin-plugin-qqbot/temp/${imagePath}`)
+        if(!bodyContent.markdown.params) {
+          bodyContent.markdown.params = [
+            {
+              key: 'img_dec',values:[`图片 #${imagePX.width}px #${imagePX.height}px`]
+            },
+            {
+              key: 'img_url',values:[`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
+            }
+          ]
+        }
+        logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
+      }
+    }
+    let body = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `QQBot ${await this.getAccToken()}`,
+        'X-Union-Appid': this.botid
+      },
+      body: JSON.stringify(bodyContent)
+    }
+    let result
+    try {
+      result = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/messages`, body)
+      result = await result.json()
+      if (result.id) {
+        return result
+      }
+      logger.error(`发送消息错误: ${msg}`)
+      logger.error(result)
+      return
+    } catch (error) {
+      logger.error(`发送消息错误; ${msg}`)
+      logger.error(error)
+      return
+    }
   }
+  async measureImageSize(imagePath) {
+    try {
+        const metadata = await sharp(imagePath).metadata();
+        return {
+            width: metadata.width,
+            height: metadata.height
+        };
+    } catch (error) {
+        logger.error('Error measuring image size:', error);
+        throw error;
+    }
+}
 }

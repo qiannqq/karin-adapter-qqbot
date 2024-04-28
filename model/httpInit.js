@@ -1,7 +1,7 @@
 import http from 'http'
 import fs from 'fs'
 import os from 'os'
-import botyaml from './yaml.js'
+import cfg from './yaml.js'
 let pluginPath = `./plugins/karin-plugin-qqbot/`
 
 export default new class httpServer {
@@ -20,10 +20,13 @@ export default new class httpServer {
                 return
             }
             let image = fs.readFileSync(`./plugins/karin-plugin-qqbot/temp/${imagePath}`)
-            res.writeHead(200, 'image/jpeg')
+            res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Content-Disposition': 'inline'
+            });
             res.end(image)
         })
-        server.listen(await botyaml.botport())
+        server.listen(cfg.botport)
     }
     async writeImage(data) {
         if(!/^base64:\/\//.test(data)) return
