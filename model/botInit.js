@@ -140,7 +140,6 @@ export default class botInit {
               if(item.type === 'text') bodyContent.content += item.text
               if(item.type === 'image') return
             }
-            console.log(bodyContent)
             let body = {
               method: 'POST',
               headers: {
