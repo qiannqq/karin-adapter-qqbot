@@ -1,6 +1,6 @@
 ## Karin-plugin-QQBot
 ### 简介
-该插件目前仍处在测试阶段，不支持Md、富媒体信息等消息的发送，仅支持简单的文本消息，暂时不推荐安装
+该插件目前仍处在测试阶段，不支持Md、富媒体信息等消息的发送，仅支持文本/图片消息，暂时不推荐安装
 ### 安装指令
 ```
 git clone --depth=1 https://github.com/qiannqq/karin-plugin-qqbot.git ./plugins/karin-plugin-qqbot

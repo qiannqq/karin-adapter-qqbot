@@ -4,6 +4,8 @@ import YAML from 'yaml'
 import fetch from 'node-fetch'
 import pluginLoader from './eventInit.js'
 import { redis } from '../../../lib/index.js'
+import httpServer from './httpInit.js'
+import botyaml from './yaml.js'
 
 export default class botInit {
   constructor (botConfig) {
@@ -138,7 +140,31 @@ export default class botInit {
             }
             for(let item of msg) {
               if(item.type === 'text') bodyContent.content += item.text
-              if(item.type === 'image') return
+              if(item.type === 'image') {
+                let imagePath = await httpServer.writeImage(item.file)
+                let mediaBody = {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `QQBot ${await this.getAccToken()}`,
+                    'X-Union-Appid': this.botid
+                  },
+                  body: JSON.stringify({
+                    file_type: 1,
+                    url: `http://${await botyaml.botip() || await httpServer.getLocalIP()}:${await botyaml.frport() || await botyaml.botport()}/image/${imagePath}`,
+                    srv_send_msg: false
+                  })
+                }
+                logger.debug(`http://${await botyaml.botip() || await httpServer.getLocalIP()}:${await botyaml.frport() || await botyaml.botport()}/image/${imagePath}`)
+                let mediaResult
+                try {
+                  mediaResult = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/files`, mediaBody)
+                  mediaResult = await mediaResult.json()
+                } catch {}
+                logger.debug(mediaResult)
+                bodyContent.media = {file_info: mediaResult.file_info}
+                bodyContent.msg_type = 7
+              }
             }
             let body = {
               method: 'POST',

@@ -2,3 +2,9 @@
 botid: 
 # BotClientSecret
 clientSecret: 
+# 公网IP (如果你是使用frp，则填frp提供的公网ip)
+botip:
+# 本机端口 (http在本机开启的端口)
+botport: 2654
+# 实际端口 (如果你是使用frp，则填frp提供的端口)
+frport: 
