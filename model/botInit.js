@@ -3,6 +3,7 @@ import fs from 'fs'
 import YAML from 'yaml'
 import fetch from 'node-fetch'
 import pluginLoader from './eventInit.js'
+import { redis } from '../../../lib/index.js'
 
 export default class botInit {
   constructor (botConfig) {
@@ -119,8 +120,27 @@ export default class botInit {
           ],
           msg: '',
           reply: async (msg) => {
-            msg = msg[0]
-            if (msg.type !== 'text') return
+            let msg_seq
+            try {
+              msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
+            } catch {}
+            if(!msg_seq) {
+              msg_seq = 1
+            } else {
+              msg_seq++
+            }
+            await redis.set(`QQBot:${data.d.id}`, JSON.stringify(msg_seq), { EX: 300 })
+            let bodyContent = {
+              content: '',
+              msg_type: 0,
+              msg_id: data.d.id,
+              msg_seq,
+            }
+            for(let item of msg) {
+              if(item.type === 'text') bodyContent.content += item.text
+              if(item.type === 'image') return
+            }
+            console.log(bodyContent)
             let body = {
               method: 'POST',
               headers: {
@@ -128,11 +148,7 @@ export default class botInit {
                 'Authorization': `QQBot ${await this.getAccToken()}`,
                 'X-Union-Appid': this.botid
               },
-              body: JSON.stringify({
-                content: msg.text,
-                msg_type: 0,
-                msg_id: data.d.id
-              })
+              body: JSON.stringify(bodyContent)
             }
             let result
             try {
