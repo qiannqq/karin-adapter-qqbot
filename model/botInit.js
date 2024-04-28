@@ -277,11 +277,12 @@ export default class botInit {
               ]
             }
           ]
-        }  
-      } else {
-        bodyContent.markdown.params[0].values[0] += `<@${item.uid}>`
-      }
-      if(item.type === 'text') {
+        } else {
+          bodyContent.markdown.params[0].values[0] += `<@${item.uid}>`
+        }
+      } 
+      if(item.type == 'text') {
+        item.text = item.text.replace(/\n/g, '\r')
         if(!bodyContent.markdown.params) {
           bodyContent.markdown.params = [
             {
