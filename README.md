@@ -1,6 +1,7 @@
 ## Karin-plugin-QQBot
 ### 简介
-该插件目前仍处在测试阶段，不支持原生markdown，不支持纯文模板markdown
+适用于karin机器人框架的QQBot适配器
+
 ### 安装指令
 #### Github (Gitee和Github安装指令任选其一)
 ```
@@ -14,6 +15,16 @@ git clone --depth=1 https://gitee.com/qiannqq/karin-plugin-qqbot.git ./plugins/k
 ```
 pnpm i
 ```
+
+### QQBot接口支持列表
+
+- [ ] 原生markdown、纯文markdown
+- [x] 消息按钮、图文模板markdown
+- [ ] Lain-drive 图床
+- [x] 艾特参数、图片参数、文本参数
+- [x] 图文消息、文本消息、markdown消息
+- [ ] 语音、视频等富媒体消息
+
 ### markdown 设置教程
 <details><summary>图文消息</summary>
 
@@ -48,12 +59,16 @@ Markdown 源码：
 
 </details>
 
-<details><summary>匹配按钮</summary>
+<details><summary>消息按钮</summary>
 
 **目前只支持指令按钮**
 
   - plugins/karin-plugin-qqbot/Button 下为用户自定义按钮
   - plugins/karin-plugin-xxxxx/qqbot-button.js 为插件的按钮 (暂未实现)
+
+***
+  - 按钮示例
+![按钮示例](./docs/button_demo.jpg)
 
 ***
 
