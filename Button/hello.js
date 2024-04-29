@@ -1,4 +1,4 @@
-export class app {
+export class app { // class 类名必须为 app
     constructor (e) {
         this.e = e
     }
