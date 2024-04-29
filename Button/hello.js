@@ -1,6 +1,14 @@
 export class app { // class 类名必须为 app
     constructor (e) {
         this.e = e
+        /**
+         * 这里传来的e为WS接口下发的事件包，未做处理
+         * 
+         * e.d.content为消息内容
+         * e.d.author.id为用户id
+         * e.d.group_id为群id
+         * e.d.id为消息id
+         */
     }
     async getReg(msg) { //函数名必须为getReg，函数内返回获取按钮的函数名称
         switch(true) {
