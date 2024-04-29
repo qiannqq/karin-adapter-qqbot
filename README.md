@@ -30,12 +30,12 @@ Markdown 源码：
 ```
 
 配置模板参数
-| 模板参数   | 参数示例                                                          号位文字 |
+| 模板参数   | 参数示例                                                           |
 | ---------- | -------------------------------------------------------------------------- |
-| text_start | 开头文字                                                          号位文字 |
-| img_dec    | 图片                                                              号位文字 |
+| text_start | 开头文字                                                           |
+| img_dec    | 图片                                                               |
 | img_url    | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png  |
-| text_end   | 结束文字                                                          号位文字 |
+| text_end   | 结束文字                                                           |
 
 保存 → 提交审核 → 审核完成<br>
 打开plugins/karin-plugin-qqbot/config/config/Bot.yaml，填写markdown_id为你的模板ID，并开启markdown消息
@@ -45,6 +45,28 @@ Markdown 源码：
 <details><summary>纯文模板</summary>
 
 **纯文模板待支持中...**
+
+</details>
+
+<details><summary>匹配按钮</summary>
+
+**目前只支持指令按钮**
+
+  - plugins/karin-plugin-qqbot/Button 下为用户自定义按钮
+  - plugins/karin-plugin-xxxxx/qqbot-button.js 为插件的按钮 (暂未实现)
+
+***
+
+**如何返回按钮数据由开发者(用户)自行决定，plugins/karin-plugin-qqbot/Button/hello.js为示例代码**
+
+| 参数名称 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| label | string | 是 | 按钮上的文字 |
+| data | string | 是 | 指令内容(跳转按钮为跳转链接) |
+| visited_label | string | 否 | 按钮点击后显示的文字 |
+| style | number | 否 | 按钮边框颜色，0为灰，1为蓝 |
+| enter | bool | 否 | 指令按钮可用，点击按钮后直接自动发送data，默认false |
+
 
 </details>
 

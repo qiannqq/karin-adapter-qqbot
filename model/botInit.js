@@ -7,6 +7,7 @@ import { redis } from '../../../lib/index.js'
 import httpServer from './httpInit.js'
 import cfg from './yaml.js'
 import sharp from 'sharp';
+import ButtonLoad from './ButtonLoad.js'
 
 export default class botInit {
   constructor (botConfig) {
@@ -123,12 +124,12 @@ export default class botInit {
           ],
           msg: '',
           reply: async (msg) => {
-            if(cfg.markdown) return await this.SendMarkdown(msg, data)
+            if (cfg.markdown) return await this.SendMarkdown(msg, data)
             let msg_seq
             try {
               msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
-            } catch {}
-            if(!msg_seq) {
+            } catch { }
+            if (!msg_seq) {
               msg_seq = 1
             } else {
               msg_seq++
@@ -140,9 +141,9 @@ export default class botInit {
               msg_id: data.d.id,
               msg_seq,
             }
-            for(let item of msg) {
-              if(item.type === 'text') bodyContent.content += item.text
-              if(item.type === 'image') {
+            for (let item of msg) {
+              if (item.type === 'text') bodyContent.content += item.text
+              if (item.type === 'image') {
                 let imagePath = await httpServer.writeImage(item.file)
                 let mediaBody = {
                   method: 'POST',
@@ -162,9 +163,9 @@ export default class botInit {
                 try {
                   mediaResult = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/files`, mediaBody)
                   mediaResult = await mediaResult.json()
-                } catch {}
+                } catch { }
                 logger.debug(mediaResult)
-                bodyContent.media = {file_info: mediaResult.file_info}
+                bodyContent.media = { file_info: mediaResult.file_info }
                 bodyContent.msg_type = 7
               }
             }
@@ -246,12 +247,12 @@ export default class botInit {
   // async testClose () {
   //   this.ws.close()
   // }
-  async SendMarkdown(msg, data) {
+  async SendMarkdown (msg, data) {
     let msg_seq
     try {
       msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
-    } catch {}
-    if(!msg_seq) {
+    } catch { }
+    if (!msg_seq) {
       msg_seq = 1
     } else {
       msg_seq++
@@ -266,9 +267,15 @@ export default class botInit {
         custom_template_id: cfg.markdown_id || '1145141919810'
       }
     }
+    let ButtonList = await ButtonLoad.getButton(data)
+    if (Array.isArray(ButtonList) && ButtonList.length > 0) {
+      bodyContent.keyboard = {
+        content: { rows: ButtonList, bot_appid: this.botid }
+      }
+    }
     for (let item of msg) {
-      if(item.type === 'at') {
-        if(!bodyContent.markdown.params) {
+      if (item.type === 'at') {
+        if (!bodyContent.markdown.params) {
           bodyContent.markdown.params = [
             {
               key: 'text_start',
@@ -280,10 +287,10 @@ export default class botInit {
         } else {
           bodyContent.markdown.params[0].values[0] += `<@${item.uid}>`
         }
-      } 
-      if(item.type == 'text') {
+      }
+      if (item.type == 'text') {
         item.text = item.text.replace(/\n/g, '\r')
-        if(!bodyContent.markdown.params) {
+        if (!bodyContent.markdown.params) {
           bodyContent.markdown.params = [
             {
               key: 'text_start',
@@ -296,27 +303,27 @@ export default class botInit {
           bodyContent.markdown.params[0].values[0] += item.text
         }
       }
-      if(item.type === 'image') {
+      if (item.type === 'image') {
         let imagePath = await httpServer.writeImage(item.file)
         let imagePX = await this.measureImageSize(`./plugins/karin-plugin-qqbot/temp/${imagePath}`)
-        if(!bodyContent.markdown.params) {
+        if (!bodyContent.markdown.params) {
           bodyContent.markdown.params = [
             {
-              key: 'img_dec',values:[`图片 #${imagePX.width}px #${imagePX.height}px`]
+              key: 'img_dec', values: [`图片 #${imagePX.width}px #${imagePX.height}px`]
             },
             {
-              key: 'img_url',values:[`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
+              key: 'img_url', values: [`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
             }
           ]
         } else {
           bodyContent.markdown.params.push(
             {
-              key: 'img_dec',values:[`图片 #${imagePX.width}px #${imagePX.height}px`]
+              key: 'img_dec', values: [`图片 #${imagePX.width}px #${imagePX.height}px`]
             }
           )
           bodyContent.markdown.params.push(
             {
-              key: 'img_url',values:[`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
+              key: 'img_url', values: [`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`]
             }
           )
         }
@@ -348,16 +355,16 @@ export default class botInit {
       return
     }
   }
-  async measureImageSize(imagePath) {
+  async measureImageSize (imagePath) {
     try {
-        const metadata = await sharp(imagePath).metadata();
-        return {
-            width: metadata.width,
-            height: metadata.height
-        };
+      const metadata = await sharp(imagePath).metadata();
+      return {
+        width: metadata.width,
+        height: metadata.height
+      };
     } catch (error) {
-        logger.error('Error measuring image size:', error);
-        throw error;
+      logger.error('Error measuring image size:', error);
+      throw error;
     }
-}
+  }
 }
