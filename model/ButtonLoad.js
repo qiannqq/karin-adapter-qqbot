@@ -18,26 +18,29 @@ export default new class ButtonLoad {
       }
       if (!Array.isArray(deal_result)) continue
       let buttonList = []
+      let buttonLength = 0
       for (let item of deal_result) {
-        if (item.label && item.data) buttonList.push({
-          "buttons": [
-            {
-              "render_data": {
-                "label": item.label,
-                "visited_label": item.visited_label || item.label,
-                "style": item.style || 1,
+        let botton_s = []
+        for (let i of item) {
+          if(!i.label || !i.data) continue
+          botton_s.push({
+            "render_data": {
+              "label": i.label,
+              "visited_label": i.visited_label || i.label,
+              "style": i.style || 1,
+            },
+            "action": {
+              "type": 2,
+              "permission": {
+                "type": 2
               },
-              "action": {
-                "type": 2,
-                "permission": {
-                  "type": 2
-                },
-                "data": item.data,
-                "enter": item.enter || false
-              }
+              "data": i.data,
+              "enter": i.enter || false
             }
-          ]
-        })
+          })
+        }
+        buttonList[buttonLength] = { "buttons": botton_s }
+        buttonLength++;
       }
       return buttonList
     }
