@@ -101,114 +101,158 @@ export default class botInit {
         return
       }
       if (data.op === 0 && data.t === 'GROUP_AT_MESSAGE_CREATE') {
-        // logger.info(`收到消息 <= ${data.d.group_id}:${data.d.author.id}: ` + data.d.content.replace(/^\s/g, ''));
+        logger.debug(`[QQBot] 收到消息事件`)
         logger.debug(data)
-        let Ne = {
-          event: 'message',
-          self_id: this.botid,
-          user_id: data.d.author.id,
-          group_id: data.d.group_id,
-          message_id: data.d.id,
-          message_seq: data.s,
-          raw_message: data.d.content,
-          contact: {
-            scene: "group",
-            peer: data.d.group_id
-          },
-          sender: {
-            uid: data.d.author.id,
-            uin: data.d.author.id,
-          },
-          elements: [
-            { type: 'text', text: data.d.content.replace(/^\s/g, '') }
-          ],
-          msg: '',
-          reply: async () => {
-            logger.error(`[QQBot] 发送消息失败：reply已不再提供，${logger.red(`请更新karin`)}`)
-          },
-          replyCallback: async (msg) => {
-            if (cfg.markdown) return await this.SendMarkdown(msg, data)
-            let msg_seq
-            try {
-              msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
-            } catch { }
-            if (!msg_seq) {
-              msg_seq = 1
-            } else {
-              msg_seq++
-            }
-            await redis.set(`QQBot:${data.d.id}`, JSON.stringify(msg_seq), { EX: 300 })
-            let bodyContent = {
-              content: '',
-              msg_type: 0,
-              msg_id: data.d.id,
-              msg_seq,
-            }
-            for (let item of msg) {
-              if (item.type === 'text') bodyContent.content += item.text
-              if (item.type === 'image') {
-                let imagePath = await httpServer.writeImage(item.file)
-                let mediaBody = {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `QQBot ${await this.getAccToken()}`,
-                    'X-Union-Appid': this.botid
-                  },
-                  body: JSON.stringify({
-                    file_type: 1,
-                    url: `http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`,
-                    srv_send_msg: false
-                  })
-                }
-                logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
-                let mediaResult
-                try {
-                  mediaResult = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/files`, mediaBody)
-                  mediaResult = await mediaResult.json()
-                } catch { }
-                logger.debug(mediaResult)
-                bodyContent.media = { file_info: mediaResult.file_info }
-                bodyContent.msg_type = 7
-              }
-            }
-            let body = {
+        await pluginLoader.deal(await this.dealMessage(data))
+      } else if (data.op !== 11) {
+        logger.debug(`[QQBot] 收到WS事件：`)
+        logger.debug(data)
+      }
+      this.d = data.s;
+    });
+    this.ws.on('close', async (data) => {
+      if(await this.parsingCloseCode(data)) {
+        logger.error(`[QQBot] 连接异常断开(${data}) 执行重连程序`)
+        await this.reconnect()
+      }
+    })
+  }
+  async parsingCloseCode(data) {
+    switch(data) {
+      case 4001:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`无效的 opcode`)}`)
+        return false
+      case 4002:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`无效的 payload`)}`)
+        return false
+      case 4010:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`无效的 shard`)}`)
+        return false
+      case 4012:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`无效的 version`)}`)
+        return false
+      case 4013:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`无效的 intent`)}`)
+        return false
+      case 4014:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`intent 无权限`)}`)
+        return false
+      case 4914:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`机器人已下架,只允许连接沙箱环境`)}`)
+        return false
+      case 4915:
+        logger.error(`[QQBot] 连接断开 ${logger.red(`机器人已封禁,不允许连接,申请解封后再连接`)}`)
+        return false
+    }
+    return true
+  }
+  async dealMessage(data) {
+    return {
+      event: 'message',
+      self_id: this.botid,
+      user_id: data.d.author.id,
+      group_id: data.d.group_id,
+      message_id: data.d.id,
+      message_seq: data.s,
+      raw_message: data.d.content,
+      contact: {
+        scene: "group",
+        peer: data.d.group_id
+      },
+      sender: {
+        uid: data.d.author.id,
+        uin: data.d.author.id,
+      },
+      elements: [
+        { type: 'text', text: data.d.content.replace(/^\s/g, '') }
+      ],
+      msg: '',
+      reply: async () => {
+        logger.error(`[QQBot] 发送消息失败：reply已不再提供，${logger.red(`请更新karin`)}`)
+      },
+      replyCallback: async (msg) => {
+        if (cfg.markdown) return await this.SendMarkdown(msg, data)
+        let msg_seq
+        try {
+          msg_seq = JSON.parse(await redis.get(`QQBot:${data.d.id}`))
+        } catch { }
+        if (!msg_seq) {
+          msg_seq = 1
+        } else {
+          msg_seq++
+        }
+        await redis.set(`QQBot:${data.d.id}`, JSON.stringify(msg_seq), { EX: 300 })
+        let bodyContent = {
+          content: '',
+          msg_type: 0,
+          msg_id: data.d.id,
+          msg_seq,
+        }
+        for (let item of msg) {
+          if (item.type === 'text') {
+            bodyContent.content += item.text
+            continue
+          }
+          if (item.type === 'image') {
+            let imagePath = await httpServer.writeImage(item.file)
+            let mediaBody = {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `QQBot ${await this.getAccToken()}`,
                 'X-Union-Appid': this.botid
               },
-              body: JSON.stringify(bodyContent)
+              body: JSON.stringify({
+                file_type: 1,
+                url: `http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`,
+                srv_send_msg: false
+              })
             }
-            let result
+            logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
+            let mediaResult
             try {
-              result = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/messages`, body)
-              result = await result.json()
-              if (result.id) {
-                return result
-              }
-              logger.error(`发送消息错误: ${msg}`)
-              logger.error(result)
-              return
-            } catch (error) {
-              logger.error(`发送消息错误; ${msg}`)
-              logger.error(error)
-              return
-            }
+              mediaResult = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/files`, mediaBody)
+              mediaResult = await mediaResult.json()
+            } catch { }
+            logger.debug(mediaResult)
+            bodyContent.media = { file_info: mediaResult.file_info }
+            bodyContent.msg_type = 7
+            continue
           }
+          if (item.type === `at`) continue
+          if(item.type === `markdown`) {
+            logger.mark(`[QQBot] 未启用markdown`)
+            continue
+          }
+          logger.error(`[QQBot] 不支持的消息类型:${item.type}`)
+          continue
         }
-        await pluginLoader.deal(Ne)
-      } else if (data.op !== 11) {
-        logger.info(`收到WS事件：`)
-        logger.info(data)
+        let body = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `QQBot ${await this.getAccToken()}`,
+            'X-Union-Appid': this.botid
+          },
+          body: JSON.stringify(bodyContent)
+        }
+        let result
+        try {
+          result = await fetch(`https://api.sgroup.qq.com/v2/groups/${data.d.group_id}/messages`, body)
+          result = await result.json()
+          if (result.id) {
+            return result
+          }
+          logger.error(`发送消息错误: ${msg}`)
+          logger.error(result)
+          return
+        } catch (error) {
+          logger.error(`发送消息错误; ${msg}`)
+          logger.error(error)
+          return
+        }
       }
-      this.d = data.s;
-    });
-    this.ws.on('close', async (data) => {
-      logger.error(`[QQBot] 连接异常断开(${data}) 执行重连程序`)
-      await this.reconnect()
-    })
+    }
   }
   async reconnect () {
     let ws = new WebSocket('wss://api.sgroup.qq.com/websocket');

@@ -12,7 +12,7 @@ export default new class QQBotInit {
     }
     let config = YAML.parse(fs.readFileSync(`./plugins/karin-plugin-qqbot/config/config/Bot.yaml`, `utf-8`))
     if (!config?.botid || !config?.clientSecret) return
-    logger.info(`[botInit] QQBot初始化`)
+    logger.info(`[QQBot] QQBot初始化`)
     let Bot = new botInit(config)
     let acc_token = await Bot.getAccToken()
     await Bot.getWss(acc_token)
