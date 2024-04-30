@@ -123,7 +123,10 @@ export default class botInit {
             { type: 'text', text: data.d.content.replace(/^\s/g, '') }
           ],
           msg: '',
-          reply: async (msg) => {
+          reply: async () => {
+            logger.error(`[QQBot] 发送消息失败：reply已不再提供，${logger.red(`请更新karin`)}`)
+          },
+          replyCallback: async (msg) => {
             if (cfg.markdown) return await this.SendMarkdown(msg, data)
             let msg_seq
             try {
@@ -333,7 +336,6 @@ export default class botInit {
         continue
       }
       if(item.type === 'button') {
-
         if(!bodyContent.keyboard) {
           bodyContent.keyboard = {
             content: { rows: [ { buttons: item.buttons } ], bot_appid: this.botid }
@@ -341,7 +343,10 @@ export default class botInit {
         } else {
           bodyContent.keyboard.content.rows.push({ buttons: item.buttons })
         }
+        continue
       }
+      if(item.type === 'markdown') continue
+      logger.error(`[QQBot] 不支持的消息类型:${item.type}`)
     }
     let body = {
       method: 'POST',
