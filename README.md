@@ -25,8 +25,8 @@ pnpm i
 - [x] 图文消息、文本消息、markdown消息
 - [ ] 语音、视频等富媒体消息
 
-### markdown 设置教程
-<details><summary>图文消息</summary>
+### 高阶能力
+<details><summary>markdown模板 图文消息</summary>
 
 模板名称：图文消息
 
@@ -53,26 +53,22 @@ Markdown 源码：
 
 </details>
 
-<details><summary>纯文模板</summary>
+<details><summary>markdown模板 纯文模板</summary>
 
 **纯文模板待支持中...**
 
 </details>
 
-<details><summary>消息按钮</summary>
+<details><summary>用户自定义消息按钮</summary>
 
-**目前只支持指令按钮**
+<!-- **高阶功能，有一定动手能力的可以尝试**<br>
+**如果你是插件开发者，请使用karin的segment.button来为你的功能提供按钮，而不是使用“用户自定义消息按钮”** -->
+  - 你可以在不修改插件本体或reply的情况下对部分功能提供你自定义的按钮(目前仅支持指令按钮)
+  - **如果你是插件开发者，请使用karin的segment.button来为你的功能提供按钮，而不是使用“用户自定义消息按钮”**
+  - plugins/karin-plugin-qqbot/Button 存放自定义按钮
+  - plugins/karin-plugin-qqbot/Button/hello.js 示例代码
 
-  - plugins/karin-plugin-qqbot/Button 下为用户自定义按钮
-  - plugins/karin-plugin-xxxxx/qqbot-button.js 为插件的按钮 (暂未实现)
-
-***
-  - 按钮示例
-![按钮示例](./docs/button_demo.jpg)
-
-***
-
-**如何返回按钮数据由开发者(用户)自行决定，plugins/karin-plugin-qqbot/Button/hello.js为示例代码**
+**参数说明**
 
 | 参数名称 | 类型 | 是否必填 | 说明 |
 |---|---|---|---|
@@ -81,6 +77,8 @@ Markdown 源码：
 | visited_label | string | 否 | 按钮点击后显示的文字 |
 | style | number | 否 | 按钮边框颜色，0为灰，1为蓝 |
 | enter | bool | 否 | 指令按钮可用，点击按钮后直接自动发送data，默认false |
+
+**如何返回按钮数据由用户自行决定，但请务必按照正确格式返回**
 
 
 </details>

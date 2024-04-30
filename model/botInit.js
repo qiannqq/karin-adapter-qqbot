@@ -287,6 +287,7 @@ export default class botInit {
         } else {
           bodyContent.markdown.params[0].values[0] += `<@${item.uid}>`
         }
+        continue
       }
       if (item.type == 'text') {
         item.text = item.text.replace(/\n/g, '\r')
@@ -302,6 +303,7 @@ export default class botInit {
         } else {
           bodyContent.markdown.params[0].values[0] += item.text
         }
+        continue
       }
       if (item.type === 'image') {
         let imagePath = await httpServer.writeImage(item.file)
@@ -328,6 +330,17 @@ export default class botInit {
           )
         }
         logger.mark(`http://${cfg.botip || await httpServer.getLocalIP()}:${cfg.frport || cfg.botport}/image/${imagePath}`)
+        continue
+      }
+      if(item.type === 'button') {
+
+        if(!bodyContent.keyboard) {
+          bodyContent.keyboard = {
+            content: { rows: [ { buttons: item.buttons } ], bot_appid: this.botid }
+          }
+        } else {
+          bodyContent.keyboard.content.rows.push({ buttons: item.buttons })
+        }
       }
     }
     let body = {
