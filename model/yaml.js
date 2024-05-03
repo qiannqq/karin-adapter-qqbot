@@ -1,22 +1,48 @@
-import fs from 'fs';
-import YAML from 'yaml';
+import YAML from 'yaml'
+import fs from 'fs'
+import chokidar from 'chokidar'
 
-let cfg = {};
-
-function loadConfig() {
-  try {
-    const configPath = './plugins/karin-plugin-qqbot/config/config/Bot.yaml';
-    const config = YAML.parse(fs.readFileSync(configPath, 'utf8'));
-    cfg = config;
-  } catch (error) {}
-}
-
-loadConfig();
-
-fs.watch('./plugins/karin-plugin-qqbot/config/config/Bot.yaml', (event, filename) => {
-  if (event === 'change') {
-    loadConfig();
+export default new class cfg {
+  constructor() {
+    this.configPath = './plugins/karin-plugin-qqbot/config/config/Bot.yaml'
   }
-});
 
-export default cfg;
+  initCfg() {
+    let watcher = chokidar.watch(this.configPath)
+    watcher.on('change', path => {
+      logger.mark('[QQBot] 修改配置文件')
+    })
+  }
+
+  get boid() {
+    return this.YAMLparse('botid')
+  }
+
+  get clientSecret() {
+    return this.YAMLparse('clientSecret')
+  }
+
+  get botip() {
+    return this.YAMLparse('botip')
+  }
+
+  get botport() {
+    return this.YAMLparse('botport')
+  }
+
+  get frport() {
+    return this.YAMLparse('frport')
+  }
+
+  get markdown() {
+    return this.YAMLparse('markdown')
+  }
+
+  get markdown_id() {
+    return this.YAMLparse('markdown_id')
+  }
+ 
+  YAMLparse(value) {
+    return YAML.parse(fs.readFileSync(this.configPath, 'utf-8'))[value]
+  }
+}
